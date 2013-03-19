@@ -178,11 +178,11 @@ module.exports = function(grunt) {
             grunt.fatal(err);
             done();
           } else {
+            // Otherwise, aggregate stats and process next url.
             totalStats.failures += stats.failures;
             totalStats.duration += stats.end - stats.start;
             totalStats.tests += stats.tests;
 
-            // Otherwise, process next url.
             next();
           }
         }
