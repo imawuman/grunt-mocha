@@ -134,6 +134,12 @@ module.exports = function(grunt) {
     // This task is asynchronous.
     var done = this.async();
 
+    // Initialize test statistics.
+    var totalStats = {
+      failures: 0,
+      duration: 0,
+      tests: 0
+    };
     // Process each filepath in-order.
     grunt.util.async.forEachSeries(urls, function(url, next) {
       grunt.log.writeln('Testing: ' + url);
@@ -154,11 +160,6 @@ module.exports = function(grunt) {
       }
       reporter = new Reporter(runner);
 
-      var totalStats = {
-        failures: 0,
-        duration: 0,
-        tests: 0
-      };
       // Launch PhantomJS.
       phantomjs.spawn(url, {
         // Exit code to use if PhantomJS fails in an uncatchable way.
@@ -191,8 +192,7 @@ module.exports = function(grunt) {
     // All tests have been run.
     function() {
       if (totalStats.failures > 0) {
-        var duration = totalStats.duration + 'ms';
-        var failMsg = totalStats.failures + '/' + totalStats.tests + ' tests failed (' + duration + ')';
+        var failMsg = totalStats.failures + '/' + totalStats.tests + ' tests failed (' + totalStats.duration + 'ms)';
 
         // Show Growl notice, if avail
         growl(failMsg, {
