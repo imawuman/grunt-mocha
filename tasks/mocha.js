@@ -96,7 +96,7 @@ module.exports = function(grunt) {
     grunt.warn('PhantomJS timed out, possibly due to a missing Mocha run() call.', 90);
   });
 
-  
+
   // console.log pass-through.
   // phantomjs.on('console', grunt.log.writeln.bind(grunt.log));
 
@@ -130,7 +130,7 @@ module.exports = function(grunt) {
 
     // Combine any specified URLs with src files.
     var urls = options.urls.concat(this.filesSrc);
-    
+
     // This task is asynchronous.
     var done = this.async();
 
@@ -154,6 +154,11 @@ module.exports = function(grunt) {
       }
       reporter = new Reporter(runner);
 
+      var totalStats = {
+        failures: 0,
+        duration: 0,
+        tests: 0
+      };
       // Launch PhantomJS.
       phantomjs.spawn(url, {
         // Exit code to use if PhantomJS fails in an uncatchable way.
@@ -168,25 +173,14 @@ module.exports = function(grunt) {
             // Show Growl notice
             // @TODO: Get an example of this
             // growl('PhantomJS Error!');
-            
+
             // If there was an error, abort the series.
             grunt.fatal(err);
             done();
           } else {
-            // If failures, fail and show growl notice
-            if (stats.failures > 0) {
-              var duration = (stats.end - stats.start) + 'ms';
-              var failMsg = stats.failures + '/' + stats.tests + ' tests failed (' + duration + ')';
-
-              // Show Growl notice, if avail
-              growl(failMsg, {
-                image: asset('growl/error.png'),
-                title: 'Failure in ' + grunt.task.current.target,
-                priority: 3
-              });
-
-              grunt.warn(failMsg);
-            }
+            totalStats.failures += stats.failures;
+            totalStats.duration += stats.end - stats.start;
+            totalStats.tests += stats.tests;
 
             // Otherwise, process next url.
             next();
@@ -196,6 +190,19 @@ module.exports = function(grunt) {
     },
     // All tests have been run.
     function() {
+      if (totalStats.failures > 0) {
+        var duration = totalStats.duration + 'ms';
+        var failMsg = totalStats.failures + '/' + totalStats.tests + ' tests failed (' + duration + ')';
+
+        // Show Growl notice, if avail
+        growl(failMsg, {
+          image: asset('growl/error.png'),
+          title: 'Failure in ' + grunt.task.current.target,
+          priority: 3
+        });
+
+        grunt.warn(failMsg);
+      }
       done();
     });
   });
